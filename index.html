@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Detector</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1C1C1C, #3E3E3E);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            animation: backgroundAnimation 6s infinite alternate;
+        }
+
+        @keyframes backgroundAnimation {
+            0% {
+                background: linear-gradient(135deg, #1C1C1C, #3E3E3E);
+            }
+            50% {
+                background: linear-gradient(135deg, #2A2A2A, #4A4A4A);
+            }
+            100% {
+                background: linear-gradient(135deg, #3E3E3E, #1C1C1C);
+            }
+        }
+
+        .container {
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: rgba(28, 28, 28, 0.8);
+            box-shadow: 0 10px 25px rgba(60, 60, 60, 0.7);
+            border-radius: 15px;
+            text-align: center;
+            animation: float 4s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: red;
+            text-shadow: 0 0 15px rgba(255, 0, 0, 0.8), 0 0 30px rgba(255, 0, 0, 0.6);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                text-shadow: 0 0 15px rgba(255, 0, 0, 0.8), 0 0 30px rgba(255, 0, 0, 0.6);
+            }
+            50% {
+                text-shadow: 0 0 25px rgba(255, 0, 0, 1), 0 0 40px rgba(255, 0, 0, 0.8);
+            }
+        }
+
+        p {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            color: #D3D3D3;
+        }
+
+        .file-input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            opacity: 0;
+            position: absolute;
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #3E3E3E;
+            color: white;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 15px rgba(80, 80, 80, 0.8);
+        }
+
+        .file-label:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(100, 100, 100, 1);
+        }
+
+        .submit-button {
+            padding: 15px 40px;
+            background: #3E3E3E;
+            color: red;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 15px rgba(80, 80, 80, 0.8);
+        }
+
+        .submit-button:hover {
+            background: #2A2A2A;
+            box-shadow: 0 0 25px rgba(100, 100, 100, 1);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(28, 28, 28, 0.9);
+            color: white;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(60, 60, 60, 0.7);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Heart Disease Detection</h1>
+        <p>Upload your heartbeat data to detect potential heart diseases.</p>
+        <div class="file-input-container">
+            <input type="file" id="file-upload" class="file-input">
+            <label for="file-upload" class="file-label">Choose File</label>
+        </div>
+        <button class="submit-button" onclick="showResult()">Analyze</button>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function showResult() {
+            const fileInput = document.getElementById('file-upload');
+            const resultDiv = document.getElementById('result');
+
+            if (!fileInput.files.length) {
+                alert('Please upload a file before analyzing.');
+                return;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerText = 'Analyzing...';
+
+            // Simulating analysis time
+            setTimeout(() => {
+                // Replace with real backend result logic
+                const isHealthy = Math.random() > 0.5;
+                resultDiv.innerText = isHealthy
+                    ? 'The heart is healthy.'
+                    : 'The heart shows signs of potential disease.';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

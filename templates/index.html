@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioSense AI — Heart Disease Prediction System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #e63946 0%, #d62828 100%);
+            --card-bg: #ffffff;
+            --bg-color: #f8f9fa;
+        }
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #2b2d42;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, #1d3557, #0d1b2a);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .header-section {
+            background: linear-gradient(135deg, #1d3557 0%, #457b9d 100%);
+            color: white;
+            padding: 40px 0;
+            margin-bottom: 30px;
+            border-radius: 0 0 25px 25px;
+        }
+        .card-custom {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .form-label {
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: #3d5a80;
+            margin-bottom: 4px;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 10px 14px;
+            border: 1px solid #ced4da;
+            transition: all 0.2s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #e63946;
+            box-shadow: 0 0 0 0.25rem rgba(230, 57, 70, 0.15);
+        }
+        .btn-predict {
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 12px;
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 15px rgba(230, 57, 70, 0.35);
+        }
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(230, 57, 70, 0.45);
+            color: white;
+        }
+        .result-box {
+            display: none;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 25px;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .badge-metric {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        .quick-fill-btn {
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+        .pulse-heart {
+            color: #e63946;
+            animation: heartBeat 1.3s infinite;
+        }
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom px-4 py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4" href="/">
+                <i class="fa-solid fa-heart-pulse pulse-heart"></i>
+                <span>CardioSense AI</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge-metric text-white">
+                    <i class="fa-solid fa-microchip me-1"></i> Model: {{ model_name or 'Random Forest' }} ({{ accuracy or 88.5 }}% Acc)
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <header class="header-section text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold mb-2">Heart Disease Risk Prediction</h1>
+            <p class="lead mb-0 text-white-50">Advanced Machine Learning Diagnostic Support System based on Clinical Biomarkers</p>
+        </div>
+    </header>
+
+    <div class="container mb-5">
+        <div class="row g-4 justify-content-center">
+            
+            <!-- Main Form Column -->
+            <div class="col-lg-8">
+                <div class="card card-custom p-4 p-md-5">
+                    
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                        <div>
+                            <h4 class="fw-bold mb-1"><i class="fa-solid fa-notes-medical text-danger me-2"></i>Patient Clinical Parameters</h4>
+                            <p class="text-muted small mb-0">Fill in patient biometric records or use quick presets</p>
+                        </div>
+                        <div class="d-flex gap-2 mt-2 mt-sm-0">
+                            <button type="button" class="btn btn-outline-success btn-sm quick-fill-btn" onclick="fillNormalPatient()">
+                                <i class="fa-solid fa-user-check me-1"></i> Sample: Normal
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm quick-fill-btn" onclick="fillRiskPatient()">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i> Sample: High Risk
+                            </button>
+                        </div>
+                    </div>
+
+                    <form id="predictionForm">
+                        <div class="row g-3">
+                            <!-- Age -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-cake-candles me-1"></i> Age (years)</label>
+                                <input type="number" class="form-control" id="age" name="age" min="1" max="120" value="52" required>
+                            </div>
+
+                            <!-- Sex -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-venus-mars me-1"></i> Biological Sex</label>
+                                <select class="form-select" id="sex" name="sex" required>
+                                    <option value="1">Male</option>
+                                    <option value="0">Female</option>
+                                </select>
+                            </div>
+
+                            <!-- Chest Pain Type (cp) -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-stethoscope me-1"></i> Chest Pain Type</label>
+                                <select class="form-select" id="cp" name="cp" required>
+                                    <option value="0">0: Typical Angina</option>
+                                    <option value="1">1: Atypical Angina</option>
+                                    <option value="2">2: Non-anginal Pain</option>
+                                    <option value="3">3: Asymptomatic</option>
+                                </select>
+                            </div>
+
+                            <!-- Resting Blood Pressure (trestbps) -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-gauge-high me-1"></i> Resting BP (mm Hg)</label>
+                                <input type="number" class="form-control" id="trestbps" name="trestbps" min="50" max="250" value="125" required>
+                            </div>
+
+                            <!-- Serum Cholesterol (chol) -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-droplet me-1"></i> Cholesterol (mg/dl)</label>
+                                <input type="number" class="form-control" id="chol" name="chol" min="100" max="600" value="212" required>
+                            </div>
+
+                            <!-- Fasting Blood Sugar (fbs) -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-cube me-1"></i> Fasting Sugar > 120 mg/dl</label>
+                                <select class="form-select" id="fbs" name="fbs" required>
+                                    <option value="0">False (Normal)</option>
+                                    <option value="1">True (Elevated)</option>
+                                </select>
+                            </div>
+
+                            <!-- Resting ECG (restecg) -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-wave-square me-1"></i> Resting ECG</label>
+                                <select class="form-select" id="restecg" name="restecg" required>
+                                    <option value="0">0: Normal</option>
+                                    <option value="1">1: ST-T wave abnormality</option>
+                                    <option value="2">2: Left ventricular hypertrophy</option>
+                                </select>
+                            </div>
+
+                            <!-- Max Heart Rate (thalach) -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-heart me-1"></i> Max Heart Rate Achieved</label>
+                                <input type="number" class="form-control" id="thalach" name="thalach" min="60" max="230" value="168" required>
+                            </div>
+
+                            <!-- Exercise Induced Angina (exang) -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-person-running me-1"></i> Exercise Induced Angina</label>
+                                <select class="form-select" id="exang" name="exang" required>
+                                    <option value="0">No</option>
+                                    <option value="1">Yes</option>
+                                </select>
+                            </div>
+
+                            <!-- ST depression (oldpeak) -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-chart-line me-1"></i> ST Depression (oldpeak)</label>
+                                <input type="number" step="0.1" class="form-control" id="oldpeak" name="oldpeak" min="0.0" max="10.0" value="1.0" required>
+                            </div>
+
+                            <!-- Slope of peak exercise ST segment -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-arrow-trend-up me-1"></i> ST Slope</label>
+                                <select class="form-select" id="slope" name="slope" required>
+                                    <option value="0">0: Upsloping</option>
+                                    <option value="1">1: Flat</option>
+                                    <option value="2">2: Downsloping</option>
+                                </select>
+                            </div>
+
+                            <!-- Number of major vessels (ca) -->
+                            <div class="col-md-4">
+                                <label class="form-label"><i class="fa-solid fa-circle-nodes me-1"></i> Major Vessels (0-3)</label>
+                                <select class="form-select" id="ca" name="ca" required>
+                                    <option value="0">0 vessels</option>
+                                    <option value="1">1 vessel</option>
+                                    <option value="2">2 vessels</option>
+                                    <option value="3">3 vessels</option>
+                                </select>
+                            </div>
+
+                            <!-- Thalassemia (thal) -->
+                            <div class="col-md-12">
+                                <label class="form-label"><i class="fa-solid fa-dna me-1"></i> Thalassemia</label>
+                                <select class="form-select" id="thal" name="thal" required>
+                                    <option value="1">1: Normal</option>
+                                    <option value="2" selected>2: Fixed Defect</option>
+                                    <option value="3">3: Reversible Defect</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-predict w-100 py-3" id="submitBtn">
+                                <i class="fa-solid fa-heart-pulse me-2"></i> Predict Heart Disease Risk
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Prediction Result Display -->
+                    <div id="resultBox" class="result-box">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h4 class="fw-bold mb-0" id="resultTitle"></h4>
+                            <span class="badge px-3 py-2 fs-6 rounded-pill" id="riskBadge"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="fw-semibold small text-muted mb-1">Estimated Risk Probability:</label>
+                            <div class="progress" style="height: 18px; border-radius: 10px;">
+                                <div id="riskProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;">0%</div>
+                            </div>
+                        </div>
+
+                        <div id="riskFactorsSection" class="mb-3 d-none">
+                            <h6 class="fw-bold text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> Detected Clinical Risk Flags:</h6>
+                            <ul id="riskFactorsList" class="small mb-0 text-dark"></ul>
+                        </div>
+
+                        <div>
+                            <h6 class="fw-bold text-secondary"><i class="fa-solid fa-clipboard-check me-1"></i> Clinical Recommendations:</h6>
+                            <ul id="recommendationsList" class="small mb-0 text-muted"></ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Batch CSV Upload & Info Column -->
+            <div class="col-lg-4">
+                
+                <!-- Batch CSV Prediction Card -->
+                <div class="card card-custom p-4 mb-4">
+                    <h5 class="fw-bold mb-2"><i class="fa-solid fa-file-csv text-primary me-2"></i>Batch CSV Predictor</h5>
+                    <p class="text-muted small">Upload a CSV file of multiple patients to generate predictions with downloadable results.</p>
+                    
+                    <form id="batchForm" action="/predict_batch" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input class="form-control" type="file" name="file" accept=".csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-semibold">
+                            <i class="fa-solid fa-cloud-arrow-down me-1"></i> Predict & Download CSV
+                        </button>
+                    </form>
+                    <div class="mt-2 text-center">
+                        <small class="text-muted"><i class="fa-solid fa-circle-info me-1"></i>Uses <code>heart.csv</code> format</small>
+                    </div>
+                </div>
+
+                <!-- Dataset & Model Information -->
+                <div class="card card-custom p-4">
+                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-circle-question text-info me-2"></i>About the AI Model</h5>
+                    <ul class="list-unstyled small text-muted mb-3">
+                        <li class="mb-2"><i class="fa-solid fa-check-circle text-success me-2"></i><strong>Dataset:</strong> UCI Heart Disease Repository</li>
+                        <li class="mb-2"><i class="fa-solid fa-check-circle text-success me-2"></i><strong>Features:</strong> 13 Clinical Parameters</li>
+                        <li class="mb-2"><i class="fa-solid fa-check-circle text-success me-2"></i><strong>Validation:</strong> Stratified 80/20 Train/Test Split</li>
+                        <li class="mb-2"><i class="fa-solid fa-check-circle text-success me-2"></i><strong>Classifier:</strong> Tuned Random Forest / Ensemble</li>
+                    </ul>
+                    <div class="alert alert-secondary py-2 px-3 small mb-0 rounded-3">
+                        <i class="fa-solid fa-shield-heart me-1 text-danger"></i> For diagnostic assistance & informational purposes only.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function fillNormalPatient() {
+            document.getElementById('age').value = 67;
+            document.getElementById('sex').value = 1;
+            document.getElementById('cp').value = 0;
+            document.getElementById('trestbps').value = 120;
+            document.getElementById('chol').value = 229;
+            document.getElementById('fbs').value = 0;
+            document.getElementById('restecg').value = 0;
+            document.getElementById('thalach').value = 129;
+            document.getElementById('exang').value = 1;
+            document.getElementById('oldpeak').value = 2.6;
+            document.getElementById('slope').value = 1;
+            document.getElementById('ca').value = 2;
+            document.getElementById('thal').value = 3;
+        }
+
+        function fillRiskPatient() {
+            document.getElementById('age').value = 63;
+            document.getElementById('sex').value = 1;
+            document.getElementById('cp').value = 3;
+            document.getElementById('trestbps').value = 145;
+            document.getElementById('chol').value = 233;
+            document.getElementById('fbs').value = 1;
+            document.getElementById('restecg').value = 0;
+            document.getElementById('thalach').value = 150;
+            document.getElementById('exang').value = 0;
+            document.getElementById('oldpeak').value = 2.3;
+            document.getElementById('slope').value = 0;
+            document.getElementById('ca').value = 0;
+            document.getElementById('thal').value = 1;
+        }
+
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const resultBox = document.getElementById('resultBox');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Analyzing Biomarkers...';
+            
+            const formData = new FormData(this);
+            const jsonData = {};
+            formData.forEach((value, key) => jsonData[key] = value);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(jsonData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultBox.style.display = 'block';
+                    const isDisease = data.prediction === 1;
+                    
+                    if (isDisease) {
+                        resultBox.style.background = '#ffebee';
+                        resultBox.style.border = '1px solid #ffcdd2';
+                        document.getElementById('resultTitle').className = 'fw-bold text-danger mb-0';
+                        document.getElementById('resultTitle').innerHTML = '<i class="fa-solid fa-heart-crack me-2"></i>' + data.label;
+                        
+                        const riskBadge = document.getElementById('riskBadge');
+                        riskBadge.className = 'badge bg-danger px-3 py-2 fs-6 rounded-pill';
+                        riskBadge.innerText = 'High Risk';
+                        
+                        const pBar = document.getElementById('riskProgressBar');
+                        pBar.className = 'progress-bar bg-danger progress-bar-striped progress-bar-animated';
+                        pBar.style.width = data.risk_score + '%';
+                        pBar.innerText = data.risk_score + '% Risk';
+                    } else {
+                        resultBox.style.background = '#e8f5e9';
+                        resultBox.style.border = '1px solid #c8e6c9';
+                        document.getElementById('resultTitle').className = 'fw-bold text-success mb-0';
+                        document.getElementById('resultTitle').innerHTML = '<i class="fa-solid fa-heart-circle-check me-2"></i>' + data.label;
+                        
+                        const riskBadge = document.getElementById('riskBadge');
+                        riskBadge.className = 'badge bg-success px-3 py-2 fs-6 rounded-pill';
+                        riskBadge.innerText = 'Healthy / Low Risk';
+                        
+                        const pBar = document.getElementById('riskProgressBar');
+                        pBar.className = 'progress-bar bg-success progress-bar-striped';
+                        pBar.style.width = Math.max(data.risk_score, 10) + '%';
+                        pBar.innerText = data.risk_score + '% Risk';
+                    }
+
+                    // Risk flags
+                    const flagsSection = document.getElementById('riskFactorsSection');
+                    const flagsList = document.getElementById('riskFactorsList');
+                    flagsList.innerHTML = '';
+                    if (data.risk_factors && data.risk_factors.length > 0) {
+                        flagsSection.classList.remove('d-none');
+                        data.risk_factors.forEach(rf => {
+                            const li = document.createElement('li');
+                            li.innerText = rf;
+                            flagsList.appendChild(li);
+                        });
+                    } else {
+                        flagsSection.classList.add('d-none');
+                    }
+
+                    // Recommendations
+                    const recList = document.getElementById('recommendationsList');
+                    recList.innerHTML = '';
+                    data.recommendations.forEach(r => {
+                        const li = document.createElement('li');
+                        li.innerText = r;
+                        recList.appendChild(li);
+                    });
+
+                    resultBox.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('Prediction Error: ' + data.message);
+                }
+            } catch (err) {
+                alert('Connection error: ' + err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-heart-pulse me-2"></i> Predict Heart Disease Risk';
+            }
+        });
+    </script>
+</body>
+</html>
+
