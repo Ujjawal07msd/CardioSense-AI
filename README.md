@@ -1,11 +1,13 @@
 # CardioSense AI — Heart Disease Prediction System
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-CardioSense_AI-brightgreen?style=for-the-badge&logo=render)](https://cardiosense-ai-gpw4.onrender.com/)
-[![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Framework-Flask-black?style=for-the-badge&logo=flask)](https://flask.palletsprojects.com/)
+[![Interactive Docs](https://img.shields.io/badge/Swagger_UI-/docs-teal?style=for-the-badge&logo=swagger)](https://cardiosense-ai-gpw4.onrender.com/docs)
+[![FastAPI](https://img.shields.io/badge/Framework-FastAPI-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Pydantic](https://img.shields.io/badge/Validation-Pydantic_v2-e92063?style=for-the-badge&logo=pydantic)](https://docs.pydantic.dev/)
 [![Scikit-Learn](https://img.shields.io/badge/ML-Scikit--Learn-orange?style=for-the-badge&logo=scikit-learn)](https://scikit-learn.org/)
 
-> 🌐 **Live Web Application:** [https://cardiosense-ai-gpw4.onrender.com/](https://cardiosense-ai-gpw4.onrender.com/)
+> 🌐 **Live Web Application:** [https://cardiosense-ai-gpw4.onrender.com/](https://cardiosense-ai-gpw4.onrender.com/)  
+> 📖 **Interactive Swagger API Documentation:** [https://cardiosense-ai-gpw4.onrender.com/docs](https://cardiosense-ai-gpw4.onrender.com/docs)
 
 A complete, end-to-end Machine Learning web application and diagnostic support tool to predict the presence or risk of heart disease in patients using clinical biomarkers.
 
@@ -68,14 +70,16 @@ python train_model.py
 ```
 This evaluates the models and outputs `heart_model.pkl`.
 
-### 3. Run the Web Application
+### 3. Run the FastAPI Application
 ```bash
 python app.py
 ```
+*(Or `uvicorn app:app --reload --port 5000`)*
+
 Open your browser and navigate to:
-```
-http://127.0.0.1:5000
-```
+- **Web Dashboard:** `http://127.0.0.1:5000`
+- **Interactive Swagger Docs:** `http://127.0.0.1:5000/docs`
+
 Or simply double-click **`run.bat`** on Windows!
 
 ---

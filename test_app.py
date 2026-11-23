@@ -1,68 +1,89 @@
 import unittest
-import json
 import io
 import pandas as pd
+from fastapi.testclient import TestClient
 from app import app, MODEL_FILE
 import os
 
-class HeartDiseaseAppTestCase(unittest.TestCase):
-    def setUp(self):
-        self.app = app.test_client()
-        self.app.testing = True
+class HeartDiseaseFastAPITestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.client = TestClient(app)
 
     def test_model_exists(self):
         self.assertTrue(os.path.exists(MODEL_FILE), "heart_model.pkl should exist")
 
     def test_index_page(self):
-        response = self.app.get('/')
+        response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'CardioSense AI', response.data)
-        self.assertIn(b'Patient Clinical Parameters', response.data)
+        self.assertIn('CardioSense AI', response.text)
+        self.assertIn('Patient Clinical Parameters', response.text)
+        print("PASS: Web Dashboard (GET /) loaded successfully")
+
+    def test_docs_pages(self):
+        docs_res = self.client.get('/docs')
+        self.assertEqual(docs_res.status_code, 200)
+        redoc_res = self.client.get('/redoc')
+        self.assertEqual(redoc_res.status_code, 200)
+        print("PASS: OpenAPI Swagger (/docs) and ReDoc (/redoc) accessible")
 
     def test_predict_normal_patient(self):
         normal_patient = {
-            'age': 67, 'sex': 1, 'cp': 0, 'trestbps': 120, 'chol': 229,
-            'fbs': 0, 'restecg': 0, 'thalach': 129, 'exang': 1,
+            'age': 67, 'sex': 1, 'cp': 0, 'trestbps': 120.0, 'chol': 229.0,
+            'fbs': 0, 'restecg': 0, 'thalach': 129.0, 'exang': 1,
             'oldpeak': 2.6, 'slope': 1, 'ca': 2, 'thal': 3
         }
-        response = self.app.post('/predict', data=json.dumps(normal_patient), content_type='application/json')
+        response = self.client.post('/predict', json=normal_patient)
         self.assertEqual(response.status_code, 200)
-        data = json.loads(response.data)
+        data = response.json()
         self.assertEqual(data['status'], 'success')
         self.assertEqual(data['prediction'], 0)
         self.assertEqual(data['label'], 'Low Risk / Normal')
-        print("Normal Patient Test Result:", data['label'], f"Risk: {data['risk_score']}%")
+        print(f"PASS: Normal Patient prediction -> {data['label']} (Risk: {data['risk_score']}%)")
 
     def test_predict_high_risk_patient(self):
         risk_patient = {
-            'age': 63, 'sex': 1, 'cp': 3, 'trestbps': 145, 'chol': 233,
-            'fbs': 1, 'restecg': 0, 'thalach': 150, 'exang': 0,
+            'age': 63, 'sex': 1, 'cp': 3, 'trestbps': 145.0, 'chol': 233.0,
+            'fbs': 1, 'restecg': 0, 'thalach': 150.0, 'exang': 0,
             'oldpeak': 2.3, 'slope': 0, 'ca': 0, 'thal': 1
         }
-        response = self.app.post('/predict', data=json.dumps(risk_patient), content_type='application/json')
+        response = self.client.post('/predict', json=risk_patient)
         self.assertEqual(response.status_code, 200)
-        data = json.loads(response.data)
+        data = response.json()
         self.assertEqual(data['status'], 'success')
         self.assertEqual(data['prediction'], 1)
         self.assertEqual(data['label'], 'Heart Disease Detected')
-        print("High Risk Patient Test Result:", data['label'], f"Risk: {data['risk_score']}%", f"Flags: {data['risk_factors']}")
+        self.assertTrue(len(data['risk_factors']) > 0)
+        print(f"PASS: High Risk Patient prediction -> {data['label']} (Risk: {data['risk_score']}%)")
+
+    def test_validation_error(self):
+        # Age negative or beyond 120 should be caught by Pydantic automatically
+        invalid_patient = {
+            'age': -10, 'sex': 1, 'cp': 0, 'trestbps': 120.0, 'chol': 229.0,
+            'fbs': 0, 'restecg': 0, 'thalach': 129.0, 'exang': 1,
+            'oldpeak': 2.6, 'slope': 1, 'ca': 2, 'thal': 3
+        }
+        response = self.client.post('/predict', json=invalid_patient)
+        self.assertEqual(response.status_code, 422)  # Pydantic validation error code
+        print("PASS: Pydantic input validation correctly rejected invalid age (-10)")
 
     def test_predict_batch_csv(self):
         df_sample = pd.read_csv('heart.csv').head(5).drop(columns=['target'])
         csv_bytes = io.BytesIO()
         df_sample.to_csv(csv_bytes, index=False)
         csv_bytes.seek(0)
-        
-        response = self.app.post('/predict_batch', 
-                                data={'file': (csv_bytes, 'test_patients.csv')},
-                                content_type='multipart/form-data')
+
+        response = self.client.post(
+            '/predict_batch',
+            files={'file': ('test_patients.csv', csv_bytes, 'text/csv')}
+        )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.headers.get('Content-Type'), 'text/csv; charset=utf-8')
-        result_df = pd.read_csv(io.BytesIO(response.data))
+        self.assertIn('text/csv', response.headers.get('content-type', ''))
+        result_df = pd.read_csv(io.BytesIO(response.content))
         self.assertIn('Prediction', result_df.columns)
         self.assertIn('Heart_Disease_Risk_%', result_df.columns)
         self.assertEqual(len(result_df), 5)
-        print("Batch CSV Prediction Test Result: Successfully generated predictions for 5 rows")
+        print("PASS: Batch CSV predictions successfully generated for 5 patients")
 
 if __name__ == '__main__':
     unittest.main()

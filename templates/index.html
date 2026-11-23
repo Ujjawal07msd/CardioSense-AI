@@ -108,8 +108,14 @@
                 <span>CardioSense AI</span>
             </a>
             <div class="d-flex align-items-center gap-3">
+                <a href="/docs" target="_blank" class="btn btn-outline-light btn-sm rounded-pill px-3 fw-semibold">
+                    <i class="fa-solid fa-book-medical me-1 text-warning"></i> API Docs (Swagger)
+                </a>
                 <span class="badge-metric text-white">
-                    <i class="fa-solid fa-microchip me-1"></i> Model: {{ model_name or 'Random Forest' }} ({{ accuracy or 88.5 }}% Acc)
+                    <i class="fa-solid fa-bolt me-1 text-warning"></i> FastAPI
+                </span>
+                <span class="badge-metric text-white d-none d-md-inline">
+                    <i class="fa-solid fa-microchip me-1"></i> {{ model_name or 'Random Forest' }} ({{ accuracy or 83.6 }}% Acc)
                 </span>
             </div>
         </div>
