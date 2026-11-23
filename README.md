@@ -1,5 +1,12 @@
 # CardioSense AI — Heart Disease Prediction System
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-CardioSense_AI-brightgreen?style=for-the-badge&logo=render)](https://cardiosense-ai-gpw4.onrender.com/)
+[![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Framework-Flask-black?style=for-the-badge&logo=flask)](https://flask.palletsprojects.com/)
+[![Scikit-Learn](https://img.shields.io/badge/ML-Scikit--Learn-orange?style=for-the-badge&logo=scikit-learn)](https://scikit-learn.org/)
+
+> 🌐 **Live Web Application:** [https://cardiosense-ai-gpw4.onrender.com/](https://cardiosense-ai-gpw4.onrender.com/)
+
 A complete, end-to-end Machine Learning web application and diagnostic support tool to predict the presence or risk of heart disease in patients using clinical biomarkers.
 
 Based on the UCI Heart Disease Dataset, evaluating multiple classification models (Random Forest, Gradient Boosting, Logistic Regression, etc.).
